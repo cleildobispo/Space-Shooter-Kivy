@@ -67,7 +67,7 @@ class SpaceInvaderGame(Widget):
         self.right_pressed = False
         
         Clock.schedule_interval(self.update, 1.0/60.0)
-        Clock.schedule_interval(self.spawn_enemy, 1.0/2.0)
+        Clock.schedule_interval(self.spawn_inimigo, 1.0/2.0)
         
         self._init_inimigos()
 
@@ -126,7 +126,7 @@ class SpaceInvaderGame(Widget):
         self.add_widget(enemy)
         self.inimigos.append(enemy)
        
-    def spawn_enemy(self, dt):
+    def spawn_inimigo(self, dt):
          while(len(self.inimigos) < 15):
             enemy = Inimigo()
             enemy.pos = (randint(0, screen_width - enemy.width), screen_height)
