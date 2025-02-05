@@ -12,9 +12,9 @@ screen_width = 800
 screen_height = 600
 Window.size = (screen_width, screen_height) 
 
-class Bullet(Widget):
+class Municao(Widget):
     def __init__(self, **kwargs):
-        super(Bullet, self).__init__(**kwargs)
+        super(Municao, self).__init__(**kwargs)
         with self.canvas:
             Color(1, 1, 1, 1)
             self.rect = Rectangle(pos=(0,0), size=(5, 10))
@@ -29,17 +29,17 @@ class Bullet(Widget):
         self.y += self.velocity_y
         self.x += self.velocity_x
         
-class Enemy(Image):
+class Inimigo(Image):
     def __init__(self, **kwargs):
-        super(Enemy, self).__init__(**kwargs)
+        super(Inimigo, self).__init__(**kwargs)
         self.source = 'enemies.png'
         self.size_hint= (None, None)
-        self.size = (50, 50)
+        self.size = (100, 100)
        
             
 class SpaceInvaderGame(Widget):
-    bullets = ListProperty([])
-    enemies = ListProperty([])
+    tiros = ListProperty([])
+    inimigos = ListProperty([])
     
     def __init__(self, **kwargs):
         
@@ -55,13 +55,13 @@ class SpaceInvaderGame(Widget):
         # adicionando a imagem da nave,  com a posiçõa
         self.nave = Image(source='./nave.png', size=(74,74), pos=(screen_width/2-50, 20), allow_stretch = True)
         self.add_widget(self.nave)
-        Window.bind(on_resize=self.on_window_resize)
+        Window.bind(on_resize=self.window_resize)
 
         self.logger.info("Testing Logger, init finished")
         
      # movimentao da nave  
-        Window.bind(on_key_down = self.on_key_down)
-        Window.bind(on_key_up = self.on_key_up)    
+        Window.bind(on_key_down = self.IrDireita)
+        Window.bind(on_key_up = self.IrEsquerda)    
         
         self.left_pressed = False
         self.right_pressed = False
@@ -69,79 +69,81 @@ class SpaceInvaderGame(Widget):
         Clock.schedule_interval(self.update, 1.0/60.0)
         Clock.schedule_interval(self.spawn_enemy, 1.0/2.0)
         
-        self._init_enemies()
+        self._init_inimigos()
 
-    def on_window_resize(self, width, height, *args):
+    def window_resize(self, width, height, *args):
         self.background.size = Window.size
         self.nave.pos = (Window.size[0]/2-50, 20)
     
-    def on_key_down(self, window, key, *args):
+    def IrDireita(self, window, key, *args):
         if key == 276:
             self.left_pressed = True
         if key == 275:
             self.right_pressed = True
         if key == 32: #aqui é pra atirar qnd apertar o espaço 
-            self.fire_bullet()
+            self.atirar()
                 
-    def on_key_up(self, window, key, *args):
+    def IrEsquerda(self, window, key, *args):
         if key == 276:
             self.left_pressed = False
         if key == 275:
             self.right_pressed = False
         if key == 32:
-            self.fire_bullet()
+            self.atirar()
             
     def update(self, dt):
         if self.left_pressed and self.nave.x > 0:
             self.nave.x -= 5
         if self.right_pressed and self.nave.right < self.width:
             self.nave.x += 5
-        for bullet in self.bullets:
+        for bullet in self.tiros:
             bullet.y += 10
             if bullet.y > screen_height:
                 self.remove_widget(bullet)
-                self.bullets.remove(bullet) 
+                self.tiros.remove(bullet) 
                 
             bullet.update()
-        for enemy in self.enemies:
+        for enemy in self.inimigos:
             
             enemy.y -= 1
             if enemy.y < 0:
                 self.remove_widget(enemy)
-                self.enemies.remove(enemy)       
+                self.inimigos.remove(enemy)       
                 
-                
-    def fire_bullet(self):
-        bullet = Bullet()
+        self.ver_colisao()
+        
+    def atirar(self):
+        bullet = Municao()
         bullet.size = (5, 5)
         bullet.pos = (self.nave.center_x - bullet.width/2, self.nave.top)
         self.add_widget(bullet)
-        self.bullets.append(bullet)
+        self.tiros.append(bullet)
        
 
-    def _init_enemies(self):
-        enemy = Enemy()
+    def _init_inimigos(self):
+        enemy = Inimigo()
         enemy.pos = (randint(0, screen_width - enemy.width), screen_height)
         self.add_widget(enemy)
-        self.enemies.append(enemy)
+        self.inimigos.append(enemy)
        
     def spawn_enemy(self, dt):
-         while(len(self.enemies) < 15):
-            enemy = Enemy()
+         while(len(self.inimigos) < 15):
+            enemy = Inimigo()
             enemy.pos = (randint(0, screen_width - enemy.width), screen_height)
             self.add_widget(enemy)
-            self.enemies.append(enemy) 
-    def collision(self):
-        for enemy in self.enemies:
-            for bullet in self.bullets:
-                if self.is_collision(bullet, enemy):
+            self.inimigos.append(enemy) 
+    def ver_colisao(self):
+        for enemy in self.inimigos:
+            for bullet in self.tiros:
+                if self.colisao(bullet, enemy):
                     self.remove_widget(bullet)
-                    self.bullets.remove(bullet)
                     self.remove_widget(enemy)
-                    self.enemies.remove(enemy)
+                    self.tiros.remove(bullet)
+                    self.inimigos.remove(enemy)
+                    break
                 
-    def is_collision(self, enemy, bullet):
-        if bullet.x > enemy.x and bullet.x < enemy.right and bullet.y > enemy.y and bullet.y < enemy.top:
+    def colisao(self, enemy, bullet):
+        if (bullet.x < enemy.right and bullet.right > enemy.x and bullet.y < enemy.top and bullet.top > enemy.y):
             return True
         else:
             return False
