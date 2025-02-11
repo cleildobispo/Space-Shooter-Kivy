@@ -4,7 +4,7 @@ from kivy.uix.image import Image
 from kivy.core.window import  Window
 from kivy.graphics import Rectangle, Color
 from kivy.clock import Clock    #atualização da tela em tempo real
-from kivy.properties import ListProperty
+from kivy.properties import ListProperty, OptionProperty
 from random import randint
 import logging
 
@@ -40,6 +40,9 @@ class Inimigo(Image):
 class SpaceInvaderGame(Widget):
     tiros = ListProperty([])
     inimigos = ListProperty([])
+    game_overimage = OptionProperty('gameover.png')
+    game_over_flag = False
+    
     
     def __init__(self, **kwargs):
         
@@ -92,6 +95,9 @@ class SpaceInvaderGame(Widget):
             self.atirar()
             
     def update(self, dt):
+        if self.game_over_flag:
+            return
+        
         if self.left_pressed and self.nave.x > 0:
             self.nave.x -= 5
         if self.right_pressed and self.nave.right < self.width:
@@ -113,6 +119,8 @@ class SpaceInvaderGame(Widget):
         self.ver_colisao()
         
     def atirar(self):
+        if self.game_over_flag:
+            return
         bullet = Municao()
         bullet.size = (5, 5)
         bullet.pos = (self.nave.center_x - bullet.width/2, self.nave.top)
@@ -141,13 +149,32 @@ class SpaceInvaderGame(Widget):
                     self.tiros.remove(bullet)
                     self.inimigos.remove(enemy)
                     break
-                
-    def colisao(self, enemy, bullet):
-        if (bullet.x < enemy.right and bullet.right > enemy.x and bullet.y < enemy.top and bullet.top > enemy.y):
-            return True
-        else:
-            return False
+        for enemy in self.inimigos[:]:
+            if self.colisao(enemy, self.nave):
+                self.game_over() 
             
+        
+              
+    def colisao(self, obj1, obj2):
+        if (obj1.x < obj2.right and obj1.right > obj2.x and
+            obj1.y < obj2.top and obj1.top > obj2.y):
+            return True
+        return False
+     
+def game_over(self):
+    self.game_over_flag = True
+    for bullet in self.tiros:
+        self.remove_widget(bullet)
+    for enemy in self.inimigos:
+        self.remove_widget(enemy)
+    self.bullets.clear()
+    self.enemies.clear()    
+    self.game_over_image = source='gameover.png'       
+    self.game_over.image.size = (400, 400)
+    self.add_widget(self.game_over_image)
+    self.game_over_image.pos = (screen_width/2 - 200, screen_height/2 - 200)
+    self.add_widget(self.game_over_image)
+    
 class SpaceInvaderApp(App):
     def build(self):
         return SpaceInvaderGame()
