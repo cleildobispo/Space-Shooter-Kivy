@@ -50,6 +50,7 @@ class SpaceInvaderGame(Widget):
         self.tiros = []
         self.inimigos = []
         self.game_over_flag = False
+        self.restarting = False
         self.logger = logging.getLogger().getChild(__name__)
         self.pontuacao = 0
         
@@ -85,18 +86,23 @@ class SpaceInvaderGame(Widget):
         self.nave.pos = (Window.size[0]/2-50, 20)
     
     def IrDireita(self, window, key, *args):
+        if self.restarting:
+            return
         if key == 276:
             self.left_pressed = True
         if key == 275:
             self.right_pressed = True
                 
     def IrEsquerda(self, window, key, *args):
+        if self.restarting:
+            return
         if key == 276:
             self.left_pressed = False
         if key == 275:
             self.right_pressed = False
         if key == 32:
             if self.game_over_flag:
+                self.restarting = True
                 self.game_over_flag = False
                 self.inimigos = []
                 self.tiros = []
@@ -162,9 +168,10 @@ class SpaceInvaderGame(Widget):
                     self.label_pontuacao.text = f"Pontos: {self.pontuacao}"
                           
         for enemy in self.inimigos:
+            if self.game_over_flag:
+                return
             if self.colisao(enemy, self.nave):
-                self.game_over() 
-                break                
+                self.game_over()
             if enemy.y == self.nave.y:
                 self.game_over()
         
@@ -173,7 +180,7 @@ class SpaceInvaderGame(Widget):
             return True
         return False
      
-    def game_over(self): 
+    def game_over(self):
         self.inimigos = []
         self.tiros = []
         self.game_over_flag = True
